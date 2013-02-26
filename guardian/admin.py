@@ -178,7 +178,7 @@ class GuardedModelAdmin(admin.ModelAdmin):
         users_perms = SortedDict(
             get_users_with_perms(obj, attach_perms=True,
                 with_group_users=False))
-        users_perms.keyOrder.sort(key=lambda user: user.username)
+        users_perms.keyOrder.sort(key=lambda user: user.get_username())
         groups_perms = SortedDict(
             get_groups_with_perms(obj, attach_perms=True))
         groups_perms.keyOrder.sort(key=lambda group: group.name)
@@ -361,7 +361,8 @@ class UserManage(forms.Form):
         """
         username = self.cleaned_data['user']
         try:
-            user = get_user_model().objects.get(username=username)
+            lookup = {getattr(get_user_model(), 'USERNAME_FIELD', 'username'): username}
+            user = get_user_model().objects.get(**lookup)
             return user
         except get_user_model().DoesNotExist:
             raise forms.ValidationError(

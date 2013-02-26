@@ -19,6 +19,7 @@ from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext, TemplateDoesNotExist
 from django.utils.http import urlquote
+from django.db.models.fields.related import RelatedField
 
 from guardian.compat import get_user_model
 from guardian.conf import settings as guardian_settings
@@ -148,10 +149,10 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
     if isinstance(obj, Model):
         obj = obj.__class__
     ctype = ContentType.objects.get_for_model(obj)
-    for name in dir(obj):
-        attr = getattr(obj, name)
-        if hasattr(attr, 'related'):
-            related = attr.related
+    for name in obj._meta.get_all_field_names():
+        field = obj._meta.get_field_by_name(name)
+        if isinstance(field[0], RelatedField):
+            related = field
             model = getattr(related, 'model', None)
             if (model and issubclass(model, base_cls) and
                     model is not generic_cls):
